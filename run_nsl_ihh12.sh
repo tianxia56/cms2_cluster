@@ -37,29 +37,32 @@ run_selscan() {
 }
 
 # Monitor the sel and neut directories for new TPED files and run selscan commands on them
-processed_files=()
-total_simulations=$((selected_simulation_number + neutral_simulation_number))
+processed_sel_files=()
+processed_neut_files=()
+total_sel_simulations=$((selected_simulation_number + 1))
+total_neut_simulations=$((neutral_simulation_number + 1))
+
 while true; do
     for ((sim_id=0; sim_id<=selected_simulation_number; sim_id++)); do
         tped_file="sel/sel.hap.${sim_id}_0_1.tped"
-        if [[ ! " ${processed_files[@]} " =~ " ${tped_file} " ]]; then
+        if [[ ! " ${processed_sel_files[@]} " =~ " ${tped_file} " ]]; then
             if [[ -f "$tped_file" ]]; then
                 run_selscan "$tped_file"
-                processed_files+=("$tped_file")
+                processed_sel_files+=("$tped_file")
             fi
         fi
     done
     for ((sim_id=0; sim_id<=neutral_simulation_number; sim_id++)); do
         tped_file="neut/neut.hap.${sim_id}_0_1.tped"
-        if [[ ! " ${processed_files[@]} " =~ " ${tped_file} " ]]; then
+        if [[ ! " ${processed_neut_files[@]} " =~ " ${tped_file} " ]]; then
             if [[ -f "$tped_file" ]]; then
                 run_selscan "$tped_file"
-                processed_files+=("$tped_file")
+                processed_neut_files+=("$tped_file")
             fi
         fi
     done
-    if [[ ${#processed_files[@]} -ge $total_simulations ]]; then
-        echo "Processed all required TPED files for NSL and IHH12. Exiting."
+    if [[ ${#processed_sel_files[@]} -ge $total_sel_simulations ]]; then
+        echo "Processed all required TPED files for NSL and IHH12 in sel directory. Exiting."
         break
     fi
     sleep 10

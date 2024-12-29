@@ -1,6 +1,10 @@
 args <- commandArgs(trailingOnly = TRUE)
-demographic_model <- args[1]
-simulation_serial_number <- as.integer(args[2])
+sim_id <- as.integer(args[1])
+demographic_model <- args[2]
+simulation_serial_number <- as.integer(args[3])
+
+# Define sim_ids
+sim_ids <- 0:simulation_serial_number
 
 # Create output directory if it doesn't exist
 output_dir <- "output"
@@ -9,7 +13,7 @@ if (!dir.exists(output_dir)) {
 }
 
 for (sim_id in sim_ids) {
-  output_file <- paste0(output_dir, "/", demographic_model, "_cms_stats_", sim_id, ".tsv")
+  output_file <- paste0(output_dir, "/", demographic_model, "_batch", simulation_serial_number, "_cms_stats_", sim_id, ".tsv")
   
   # Read fst_deldaf file
   fst_deldaf_file <- paste0("two_pop_stats/", sim_id, "_fst_deldaf.tsv")
@@ -58,13 +62,3 @@ for (sim_id in sim_ids) {
   # Save the output data to file
   write.table(output_data, file = output_file, sep = "\t", row.names = FALSE, col.names = TRUE, quote = FALSE)
 }
-
-# Get the current date
-current_date <- Sys.Date()
-
-# Zip all the output files into one single tsv zip with the current date in the name
-zipfile <- paste0(output_dir, "/", demographic_model, "_cms_stats_all_", current_date, ".zip")
-system(paste("zip -j", zipfile, paste0(output_dir, "/", demographic_model, "_cms_stats_*.tsv")))
-
-# Remove the individual tsv files after making the zip
-file.remove(list.files(output_dir, pattern = "*.tsv", full.names = TRUE))

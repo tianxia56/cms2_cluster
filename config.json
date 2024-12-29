@@ -1,7 +1,7 @@
 {
-    "selected_simulation_number": 1,
+    "selected_simulation_number": 49,
     "simulation_serial_number": 1,
-    "neutral_simulation_number": 1,
+    "neutral_simulation_number": 49,
     "demographic_model": "jv_default_112115_825am.par",
     "selective_sweep": "pop_event sweep_mult_standing \"sweep\" 1 U(0, 2000) E(20) .5 .05-.95 1 U(0, 2000)"
 }
