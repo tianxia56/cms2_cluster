@@ -19,6 +19,20 @@ record_runtime() {
     echo "Job name: $job_name, runtime: $runtime_formatted" >> output/totalruntime.txt
 }
 
+# Function to wait for jobs to complete
+wait_for_jobs() {
+    job_ids=("$@")
+    for job_id in "${job_ids[@]}"; do
+        while : ; do
+            job_status=$(squeue --job "$job_id" --noheader --format "%T" 2>/dev/null)
+            if [[ -z "$job_status" || "$job_status" == "COMPLETED" || "$job_status" == "FAILED" || "$job_status" == "CANCELLED" ]]; then
+                break
+            fi
+            sleep 10
+        done
+    done
+}
+
 # Record the start time of the entire process
 start_time_total=$(date +%s)
 
@@ -77,7 +91,6 @@ job_ids+=($job_id)
 record_runtime "run_fst_deldaf.sh" $start_time
 
 # Pass the pairwise population IDs for two pop stats tasks (xpehh for both sel and neut)
-xpehh_job_ids=()
 for ((i=0; i<${#pop_ids[@]}; i++)); do
     for ((j=i+1; j<${#pop_ids[@]}; j++)); do
         pop1=${pop_ids[$i]}
@@ -85,30 +98,36 @@ for ((i=0; i<${#pop_ids[@]}; i++)); do
         # Submit pairwise tasks for xpehh sel
         start_time=$(date +%s)
         job_id=$(sbatch --parsable --export=ALL,pop1=$pop1,pop2=$pop2 run_xpehh_sel.sh)
-        xpehh_job_ids+=($job_id)
+        job_ids+=($job_id)
         record_runtime "run_xpehh_sel.sh ($pop1 vs $pop2)" $start_time
 
         # Submit pairwise tasks for xpehh neut
         start_time=$(date +%s)
         job_id=$(sbatch --parsable --export=ALL,pop1=$pop1,pop2=$pop2 run_xpehh_neut.sh)
-        xpehh_job_ids+=($job_id)
+        job_ids+=($job_id)
         record_runtime "run_xpehh_neut.sh ($pop1 vs $pop2)" $start_time
     done
 done
 
+# Wait for all initial jobs to complete
+wait_for_jobs "${job_ids[@]}"
+
 # Submit the final task to normalize, collate stats and format results
 start_time=$(date +%s)
-final_job_id=$(sbatch --parsable --dependency=afterok:${job_ids[*]} make_norm_file.sh)
+final_job_id=$(sbatch --parsable make_norm_file.sh)
 record_runtime "make_norm_file.sh" $start_time
 echo "Final job submitted with ID: $final_job_id"
+
+# Wait for make_norm_file.sh to complete
+wait_for_jobs "$final_job_id"
 
 # Submit parallel normalization jobs after make_norm_file.sh
 norm_jobs=()
 start_time=$(date +%s)
-norm_jobs+=($(sbatch --parsable --dependency=afterok:$final_job_id norm_ihs.sh))
-norm_jobs+=($(sbatch --parsable --dependency=afterok:$final_job_id norm_nsl.sh))
-norm_jobs+=($(sbatch --parsable --dependency=afterok:$final_job_id norm_ihh12.sh))
-norm_jobs+=($(sbatch --parsable --dependency=afterok:$final_job_id norm_delihh.sh))
+norm_jobs+=($(sbatch --parsable norm_ihs.sh))
+norm_jobs+=($(sbatch --parsable norm_nsl.sh))
+norm_jobs+=($(sbatch --parsable norm_ihh12.sh))
+norm_jobs+=($(sbatch --parsable norm_delihh.sh))
 record_runtime "norm_one_pop_stats.sh" $start_time
 
 # Submit norm_xpehh.sh for each pair_id
@@ -118,14 +137,17 @@ for ((i=0; i<${#pop_ids[@]}; i++)); do
         pop2=${pop_ids[$j]}
         pair_id=${pop1}_vs_${pop2}
         start_time=$(date +%s)
-        norm_jobs+=($(sbatch --parsable --dependency=afterok:$final_job_id norm_xpehh.sh $pair_id))
+        norm_jobs+=($(sbatch --parsable norm_xpehh.sh $pair_id))
         record_runtime "norm_xpehh.sh ($pair_id)" $start_time
     done
 done
 
+# Wait for all normalization jobs to complete
+wait_for_jobs "${norm_jobs[@]}"
+
 # Submit final_output.sh after all normalization jobs are done
 start_time=$(date +%s)
-final_output_job_id=$(sbatch --parsable --dependency=afterok:${norm_jobs[*]} final_output.sh)
+final_output_job_id=$(sbatch --parsable final_output.sh)
 record_runtime "final_output.sh" $start_time
 echo "final_output.sh job submitted with ID: $final_output_job_id"
 
