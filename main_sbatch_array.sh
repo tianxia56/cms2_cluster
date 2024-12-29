@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=ycga
-#SBATCH --time=2:00:00
+#SBATCH --time=2-00:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=8000
+#SBATCH --mem-per-cpu=4000
 
 # Create output directory if it doesn't exist
 mkdir -p output
