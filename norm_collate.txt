@@ -1,0 +1,121 @@
+#!/bin/bash
+#SBATCH --partition=ycga
+#SBATCH --time=2:00:00
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=8000
+
+
+
+
+ihs
+extract column pos,ihs,daf($1_freq in this file) from:one_pop_stats/neut.hap.${sim_id}_0_1.ihs.ihs.out, 
+$head neut.hap.1_0_1.ihs.ihs.out
+368	67742	0.947674	0.115564	0.13266	-0.0599175	0.0189582	0.0966059	0.0232212	0.109439
+373	69037	0.732558	0.13929	0.121003	0.0611253	0.102368	0.0369221	0.0831604	0.0378426
+where each columns are
+locus pos 1_freq ihh_1 ihh_0 ihs derived_ihh_left derived_ihh_right ancestral_ihh_left ancestral_ihh_right
+
+nsl
+extract column pos,nsl,daf($1_freq in this file) from:one_pop_stats/neut.hap.${sim_id}_0_1.nsl.nsl.out
+$head neut.hap.1_0_1.nsl.nsl.out
+254	38784	0.401163	41.0948	38.7322	0.0257157
+257	39516	0.598837	38.8045	41.1362	-0.025342
+where each columns are
+locus pos 1_freq sl1 sl0 nsl
+
+ihh12
+extract column pos,ihh12,daf($p1 in this file) from:one_pop_stats/neut.hap.${sim_id}_0_1.ihh12.ihh12.out
+$head neut.hap.1_0_1.ihh12.ihh12.out
+id	pos	p1	ihh12
+71	12084	0.302326	0.00467772
+73	12428	0.616279	0.00507375
+77	13593	0.761628	0.00235201
+
+delihh
+compute new column delihh, and extract column pos,delihh,daf(1_freq in this file) from:one_pop_stats/neut.hap.${sim_id}_0_1.ihs.ihs.out
+$head neut.hap.1_0_1.ihs.ihs.out
+368	67742	0.947674	0.115564	0.13266	-0.0599175	0.0189582	0.0966059	0.0232212	0.109439
+373	69037	0.732558	0.13929	0.121003	0.0611253	0.102368	0.0369221	0.0831604	0.0378426
+where each columns are
+locus pos 1_freq ihh_1 ihh_0 ihs derived_ihh_left derived_ihh_right ancestral_ihh_left ancestral_ihh_right
+delihh = derived_ihh_left + derived_ihh_right - ancestral_ihh_left - ancestral_ihh_right
+
+xpehh
+extract column pos,xpehh,daf($p1 in this files) from:two_pop_stats/neut.${sim_id}_${pair_id}.xpehh.out
+$head neut.1_1_vs_2.xpehh.out
+id	pos	gpos	p1	ihh1	p2	ihh2	xpehh
+168	27116	0.0274125	0.982558	0.00315257	0.965116	0.00692015	-0.34145
+169	27175	0.0274563	0.953488	0.00317158	1	0.0070106	-0.34448
+
+
+for ihs,nsl,ihh12,delihh,combine daf and correspoding stats of all the sim id, Bin by DAF: Group the scores based on derived allele frequencies.
+Calculate Statistics: For each DAF bin, compute the mean and standard deviation of the scores.which bin=20, and save the corresonding bin file to folder norm/
+the columnd of bin files will be:bin,mean,std
+named as:norm_ihs.bin,norm_nsl.bin,norm_ihh12.bin,norm_delihh.bin
+for xpehh,combine daf and xpehh under the same ${pair_id} for all the sim id,Bin by DAF: Group the scores based on derived allele frequencies.
+Calculate Statistics: For each DAF bin, compute the mean and standard deviation of the scores.which bin=20, and save the corresonding bin file to folder norm/
+the columnd of bin files will be:bin,mean,std
+named as:norm_xpehh_${pair_id}.bin
+
+
+#######################
+ihs
+extract column pos,ihs,daf($1_freq in this file)  from:one_pop_stats/sel.hap.${sim_id}_0_1.ihs.ihs.out, 
+$head sel.hap.1_0_1.ihs.ihs.out
+368	67742	0.947674	0.115564	0.13266	-0.0599175	0.0189582	0.0966059	0.0232212	0.109439
+373	69037	0.732558	0.13929	0.121003	0.0611253	0.102368	0.0369221	0.0831604	0.0378426
+where each columns are
+locus pos 1_freq ihh_1 ihh_0 ihs derived_ihh_left derived_ihh_right ancestral_ihh_left ancestral_ihh_right
+
+nsl
+extract column pos,nsl,daf($1_freq in this file) from:one_pop_stats/sel.hap.${sim_id}_0_1.nsl.nsl.out
+$head sel.hap.1_0_1.nsl.nsl.out
+254	38784	0.401163	41.0948	38.7322	0.0257157
+257	39516	0.598837	38.8045	41.1362	-0.025342
+where each columns are
+locus pos 1_freq sl1 sl0 nsl
+
+ihh12
+extract column pos,ihh12,daf($p1 in this file) from:one_pop_stats/sel.hap.${sim_id}_0_1.ihh12.ihh12.out
+$head sel.hap.1_0_1.ihh12.ihh12.out
+id	pos	p1	ihh12
+71	12084	0.302326	0.00467772
+73	12428	0.616279	0.00507375
+77	13593	0.761628	0.00235201
+
+delihh
+compute new column delihh, and extract column pos,delihh,daf(1_freq in this file) from:one_pop_stats/sel.hap.${sim_id}_0_1.ihs.ihs.out
+$head sel.hap.1_0_1.ihs.ihs.out
+368	67742	0.947674	0.115564	0.13266	-0.0599175	0.0189582	0.0966059	0.0232212	0.109439
+373	69037	0.732558	0.13929	0.121003	0.0611253	0.102368	0.0369221	0.0831604	0.0378426
+where each columns are
+locus pos 1_freq ihh_1 ihh_0 ihs derived_ihh_left derived_ihh_right ancestral_ihh_left ancestral_ihh_right
+delihh = derived_ihh_left + derived_ihh_right - ancestral_ihh_left - ancestral_ihh_right
+
+xpehh
+extract column pos,xpehh,daf($p1 in this files) from:two_pop_stats/sel.${sim_id}_${pair_id}.xpehh.out
+$head sel.1_1_vs_2.xpehh.out
+id	pos	gpos	p1	ihh1	p2	ihh2	xpehh
+168	27116	0.0274125	0.982558	0.00315257	0.965116	0.00692015	-0.34145
+169	27175	0.0274563	0.953488	0.00317158	1	0.0070106	-0.34448
+
+sim id will be passed from bash that calling this code
+for ihs,nsl,ihh12,delihh,each extract stats will be stored in a temp file of columns: sim_id pos daf ihs,sim_id pos daf nsl,sim_id pos daf ihh12,sim_id pos daf delihh
+normalize correspoding stats using norm/norm_nsl.bin norm/norm_ihs.bin norm/norm_ihh12.bin norm/norm_delihh.bin give you bin,mean,std of each stats
+for every pos, daf falls into a bin in the bin file, compute z score as the normalized stats, add to a new column like norm_ihs, norm_nsl,norm_ihh12, norm_delihh to the correspoding temp files
+
+pair_ids = [f"{i}_vs_{j}" for i, j in combinations(range(1, 5), 2)]
+for xpehh,each extract stats will be stored in a temp file of columns: sim_id pos daf xpehh differed by ${pair_id} in their names
+normalize correspoding xpehh using matched ${pair_id}, norm/norm_xpehh_${pair_id}.bin, which give you bin,mean,std
+for every pos, daf falls into a bin in the bin file, compute z score as the normalized stats, add to a new column norm_xpehh to the correspoding temp files, then make a new temp file where outer join all  ${pair_id}, so you will get a file with columns: sim_id pos 6 different daf_${pair_id} and 6 different norm_xpehh_${pair_id}, then remove rows that have NA, then add a new column mean_norm_xpehh
+
+next, read files two_pop_stats/${sim_id}_fst_deldaf.tsv, outer join all previous made temp files for matching ${sim_id} just to add norm_ihs, norm_nsl,norm_ihh12, norm_delihh and mean_norm_xpehh to the tsv,and also read one_pop_stats/${sim_id}.iSAFE.out, with columns POS,iSAFE,DAF, for matching ${sim_id} and outer join by pos and POS, just to add column iSAFE in the tsv
+
+finally, save the tsv to output/ dictionary, 
+
+config_file="config.json"
+demographic_model=$(python3 -c 'import json; print(json.load(open("'"$config_file"'"))["demographic_model"])')
+
+naming as {demographic_model}_${sim_id}_{the date of the real time}.tsv, and zip to tsv.gz
