@@ -2,7 +2,7 @@
 
 run with env: selscan, python3, R
 
-need prepared .par file, .recom file
+need prepared .par file, .recom file, apptainer build cosi.sif docker://docker.io/tx56/cosi
 
 edit ```config.json```
 then run ```main_sbatch_array.sh```
