@@ -9,6 +9,7 @@
 # Check if cosi.sif exists, if not, build it
 #if [ ! -f cosi.sif ]; then
  #   apptainer build cosi.sif docker://docker.io/tx56/cosi
+#fi
 
 # Read inputs from JSON file using Python
 config_file="config.json"
