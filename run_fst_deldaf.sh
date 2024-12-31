@@ -27,24 +27,21 @@ run_fst_deldaf() {
     echo "Runtime for simulation ID $sim_id: $runtime seconds" >> "two_pop_stats/fst.runtime.txt"
 }
 
-# Function to check if all TPED files exist for a simulation
-check_files_exist() {
-    local sim_id=$1
-    for pop_id in "${pop_ids[@]}"; do
-        tped_file="sel/sel.hap.${sim_id}_0_${pop_id}.tped"
-        if [[ ! -f "$tped_file" ]]; then
-            return 1
-        fi
-    done
-    return 0
-}
-
 # Monitor and process simulations
 processed_files=()
 while true; do
     # Process TPED files for each simulation
     for ((sim_id=0; sim_id<=simulation_number; sim_id++)); do
-        if check_files_exist "$sim_id"; then
+        all_files_exist=true
+        for pop_id in "${pop_ids[@]}"; do
+            tped_file="sel/sel.hap.${sim_id}_0_${pop_id}.tped"
+            if [[ ! -f "$tped_file" ]]; then
+                all_files_exist=false
+                break
+            fi
+        done
+        
+        if $all_files_exist; then
             if [[ ! " ${processed_files[@]} " =~ " ${sim_id} " ]]; then
                 run_fst_deldaf "$sim_id"
                 processed_files+=("${sim_id}")
