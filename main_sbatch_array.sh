@@ -156,3 +156,5 @@ end_time_total=$(date +%s)
 total_runtime=$((end_time_total - start_time_total))
 total_runtime_formatted=$(printf '%02d:%02d:%02d' $((total_runtime/3600)) $((total_runtime%3600/60)) $((total_runtime%60)))
 echo "Total runtime: model $demographic_model serial number $simulation_serial_number $total_runtime_formatted, Date: $(date)" >> output/totalruntime.txt
+
+# Run clean.sh to clear temp files
