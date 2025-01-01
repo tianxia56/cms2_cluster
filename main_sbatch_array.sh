@@ -84,12 +84,6 @@ demographic_model=$(python3 -c 'import json; print(json.load(open("'"$config_fil
 simulation_serial_number=$(python3 -c 'import json; print(json.load(open("'"$config_file"'"))["simulation_serial_number"])')
 pop_ids=($(grep "^pop_define" $demographic_model | awk '{print $2}'))
 
-# Submit fst deldaf.sh task
-start_time=$(date +%s)
-job_id=$(sbatch --parsable --export=ALL,pop_ids="${pop_ids[*]}" run_fst_deldaf.sh)
-job_ids+=($job_id)
-record_runtime "run_fst_deldaf.sh" $start_time $(date +%s)
-
 # Pass the pairwise population IDs for two pop stats tasks (xpehh for both sel and neut)
 for ((i=0; i<${#pop_ids[@]}; i++)); do
     for ((j=i+1; j<${#pop_ids[@]}; j++)); do
@@ -121,6 +115,11 @@ echo "Final job submitted with ID: $final_job_id"
 # Wait for make_norm_file.sh to complete
 wait_for_jobs "$final_job_id"
 
+# Submit fst deldaf.sh task
+start_time=$(date +%s)
+fst_job_id=$(sbatch --parsable --export=ALL,pop_ids="${pop_ids[*]}" run_fst_deldaf.sh)
+record_runtime "run_fst_deldaf.sh" $start_time $(date +%s)
+
 # Submit parallel normalization jobs after make_norm_file.sh
 norm_jobs=()
 start_time=$(date +%s)
@@ -144,6 +143,7 @@ done
 
 # Wait for all normalization jobs to complete
 wait_for_jobs "${norm_jobs[@]}"
+
 
 # Submit final_output.sh after all normalization jobs are done
 start_time=$(date +%s)
