@@ -124,3 +124,7 @@ print("Zip file created successfully")
 # Remove the individual tsv files after making the zip
 print("Removing individual tsv files")
 file.remove(list.files(output_dir, pattern = paste0(demographic_model, "_batch", simulation_serial_number, "_cms_stats_.*\\.tsv$"), full.names = TRUE))
+
+# Run clean.sh after all jobs are done
+# print("Running clean.sh")
+# system("bash clean.sh")
