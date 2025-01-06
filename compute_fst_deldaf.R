@@ -5,7 +5,8 @@ library(data.table)
 # Get command-line arguments
 args <- commandArgs(trailingOnly = TRUE)
 sim_id <- args[1]
-pop_ids <- as.integer(args[2:length(args)])
+pop1 <- as.integer(args[2])
+pop_ids <- as.integer(args[3:length(args)])
 
 # Function to compute FST between two populations
 compute_fst <- function(daf1, daf2) {
@@ -27,7 +28,7 @@ for (pop_id in pop_ids) {
 }
 
 # Read the position column (4th column) from one TPED file (all files share the same positions)
-pos_list <- fread(paste0("sel/sel.hap.", sim_id, "_0_", pop_ids[1], ".tped"), select = 4)[[1]]
+pos_list <- fread(paste0("sel/sel.hap.", sim_id, "_0_", pop1, ".tped"), select = 4)[[1]]
 
 # Read the genetic data (5th column onward) for each population
 pop_data_list <- lapply(pop_ids, function(pop_id) {
@@ -46,24 +47,24 @@ daf_matrix <- do.call(cbind, daf_list)
 # Create a results table using the positions from the TPED file
 results <- data.table(sim_id = sim_id, pos = pos_list)
 
-# Compute FST for all pairs of populations
-for (i in 1:(length(pop_ids) - 1)) {
-  for (j in (i + 1):length(pop_ids)) {
-    fst_values <- mapply(compute_fst, daf_matrix[, i], daf_matrix[, j])
-    results[, paste0("fst_", pop_ids[i], "_vs_", pop_ids[j]) := fst_values]
+# Compute FST for pop1 versus other populations
+for (i in 1:length(pop_ids)) {
+  if (pop_ids[i] != pop1) {
+    fst_values <- mapply(compute_fst, daf_matrix[, which(pop_ids == pop1)], daf_matrix[, i])
+    results[, paste0("fst_", pop1, "_vs_", pop_ids[i]) := fst_values]
   }
 }
+
+# Compute mean FST for each position
+results[, mean_fst := rowMeans(.SD, na.rm = TRUE), .SDcols = patterns("^fst_")]
 
 # Compute ΔDAF as the difference between the highest and lowest DAF across populations
 results[, deldaf := apply(daf_matrix, 1, function(daf_values) {
   max(daf_values, na.rm = TRUE) - min(daf_values, na.rm = TRUE)
 })]
 
-# Compute mean FST for each position
-results[, mean_fst := rowMeans(.SD, na.rm = TRUE), .SDcols = patterns("^fst_")]
-
 # Compute DAF and MAF for each position (using the first population as reference)
-results[, daf := daf_matrix[, 1]]  # Reference population (first population's DAF)
+results[, daf := daf_matrix[, which(pop_ids == pop1)]]  # Reference population (pop1's DAF)
 results[, maf := pmin(daf, 1 - daf)]
 
 # Format numerical columns to 4 decimal places or scientific notation if < 0.001
@@ -81,4 +82,3 @@ output_file <- paste0("two_pop_stats/", sim_id, "_fst_deldaf.tsv")
 fwrite(results[, .(sim_id, pos, mean_fst, deldaf, daf, maf)], output_file, sep = "\t", quote = FALSE)
 
 cat("Finished processing simulation ID:", sim_id, "\n")
-

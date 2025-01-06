@@ -78,17 +78,17 @@ job_id=$(sbatch --parsable run_isafe.sh)
 job_ids+=($job_id)
 record_runtime "run_isafe.sh" $start_time $(date +%s)
 
-# Extract population IDs from the original par file
+# Extract population IDs and pop1 from the original par file
 config_file="config.json"
 demographic_model=$(python3 -c 'import json; print(json.load(open("'"$config_file"'"))["demographic_model"])')
 simulation_serial_number=$(python3 -c 'import json; print(json.load(open("'"$config_file"'"))["simulation_serial_number"])')
 pop_ids=($(grep "^pop_define" $demographic_model | awk '{print $2}'))
+pop1=$(python3 -c 'import json; print(json.load(open("'"$config_file"'"))["selective_sweep"].split()[3])')
 
 # Pass the pairwise population IDs for two pop stats tasks (xpehh for both sel and neut)
 for ((i=0; i<${#pop_ids[@]}; i++)); do
-    for ((j=i+1; j<${#pop_ids[@]}; j++)); do
-        pop1=${pop_ids[$i]}
-        pop2=${pop_ids[$j]}
+    if [[ ${pop_ids[$i]} != $pop1 ]]; then
+        pop2=${pop_ids[$i]}
         # Submit pairwise tasks for xpehh sel
         start_time=$(date +%s)
         job_id=$(sbatch --parsable --export=ALL,pop1=$pop1,pop2=$pop2 run_xpehh_sel.sh)
@@ -100,7 +100,7 @@ for ((i=0; i<${#pop_ids[@]}; i++)); do
         job_id=$(sbatch --parsable --export=ALL,pop1=$pop1,pop2=$pop2 run_xpehh_neut.sh)
         job_ids+=($job_id)
         record_runtime "run_xpehh_neut.sh ($pop1 vs $pop2)" $start_time $(date +%s)
-    done
+    fi
 done
 
 # Wait for all initial jobs to complete
@@ -131,19 +131,17 @@ record_runtime "norm_one_pop_stats.sh" $start_time $(date +%s)
 
 # Submit norm_xpehh.sh for each pair_id
 for ((i=0; i<${#pop_ids[@]}; i++)); do
-    for ((j=i+1; j<${#pop_ids[@]}; j++)); do
-        pop1=${pop_ids[$i]}
-        pop2=${pop_ids[$j]}
+    if [[ ${pop_ids[$i]} != $pop1 ]]; then
+        pop2=${pop_ids[$i]}
         pair_id=${pop1}_vs_${pop2}
         start_time=$(date +%s)
         norm_jobs+=($(sbatch --parsable norm_xpehh.sh $pair_id))
         record_runtime "norm_xpehh.sh ($pair_id)" $start_time $(date +%s)
-    done
+    fi
 done
 
 # Wait for all normalization jobs to complete
 wait_for_jobs "${norm_jobs[@]}"
-
 
 # Submit final_output.sh after all normalization jobs are done
 start_time=$(date +%s)

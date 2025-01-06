@@ -24,3 +24,6 @@ for filename in os.listdir(directory):
             file.writelines(new_content)
 
 print("All .sh files have been processed.")
+
+#SBATCH --partition=ycga
+#SBATCH --partition=week
