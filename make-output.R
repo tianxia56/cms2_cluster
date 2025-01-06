@@ -60,11 +60,11 @@ collate_stats <- function(sim_id, demographic_model, simulation_serial_number) {
   norm_delihh_data <- read.table(norm_delihh_file, header = TRUE)
   output_data <- merge(output_data, norm_delihh_data[, c("pos", "norm_delihh")], by = "pos", all = TRUE)
   
-  # Read norm_mean_xpehh file and merge
-  norm_mean_xpehh_file <- paste0("norm/temp.mean.xpehh.", sim_id, ".tsv")
-  print(paste("Reading norm_mean_xpehh file:", norm_mean_xpehh_file))
-  norm_mean_xpehh_data <- read.table(norm_mean_xpehh_file, header = TRUE)
-  output_data <- merge(output_data, norm_mean_xpehh_data[, c("pos", "mean_xpehh")], by = "pos", all = TRUE)
+  # Read norm_max_xpehh file and merge
+  norm_max_xpehh_file <- paste0("norm/temp.max.xpehh.", sim_id, ".tsv")
+  print(paste("Reading norm_max_xpehh file:", norm_max_xpehh_file))
+  norm_max_xpehh_data <- read.table(norm_max_xpehh_file, header = TRUE)
+  output_data <- merge(output_data, norm_max_xpehh_data[, c("pos", "max_xpehh")], by = "pos", all = TRUE)
   
   # Add sim_id and sim_batch_no as the first columns
   output_data$sim_id <- sim_id
@@ -87,8 +87,8 @@ for (sim_id in 0:selected_simulation_number) {
       pop1 <- pop_ids[i]
       pop2 <- pop_ids[j]
       pair_id <- paste0(pop1, "_vs_", pop2)
-      # Here you would call the make_mean_xpehh function in R
-      # make_mean_xpehh(sim_id, pair_id)
+      # Here you would call the make_max_xpehh function in R
+      # make_max_xpehh(sim_id, pair_id)
     }
   }
   
