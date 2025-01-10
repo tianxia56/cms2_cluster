@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=64000
+#SBATCH --mem-per-cpu=16000
 
 # Define variables
 config_file="config.json"
@@ -29,3 +29,6 @@ done
 
 # Call make-output.R
 Rscript make-output.R
+
+# upload to gcloud
+/home/tx56/google-cloud-sdk/bin/gsutil cp ${demographic_model}_batch${selected_simulation_number}_cms_stats_all_*.zip gs://fc-97de97ff-f4ee-414a-bf2d-a5f045b20a79/yale_cluster_sim_stats/${demographic_model%.par}
